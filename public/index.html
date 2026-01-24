@@ -1,83 +1,109 @@
 <!DOCTYPE html>
-
-
-<!-- This is a game made by the one and only IceVeryChill (Totally not taken from someone else hehehehe >:)-->
-
-
-
-
 <html>
 
 <head>
-	<base href="https://cdn.jsdelivr.net/gh/Stanlee1234/polytrack@main/">
-	<script>
-		window.jkdfgnjkndfg = document.querySelector('base').href;
-		fetch("simulation_worker.bundle.js").then(res => res.text()).then(text => {
-			const blob = new Blob([text.replaceAll("replacethisplease", window.jkdfgnjkndfg)], { type: 'application/javascript' });
-			window.simulationworker = URL.createObjectURL(blob);
-		});
-		const ogworker = window.Worker;
-		window.Worker = function (scripturl, options) {
-			if (typeof scripturl === 'string' && scripturl.toLowerCase() === "simulation_worker.bundle.js") {
-				scripturl = window.simulationworker;
-			}
-			return new ogworker(scripturl, options);
-		};
-		window.Worker.prototype = ogworker.prototype;
+    <meta charset="utf-8">
+    <base href="https://cdn.jsdelivr.net/gh/Stanlee1234/polytrack@main/">
+    <title>Polytrack</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        canvas { display: block; width: 100%; height: 100%; }
+    </style>
 
-		const ogfetch = window.fetch;
-		window.fetch = async function (input, init) {
-			if (typeof input === "string") {
-				input = input.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-			} else if (input instanceof Request) {
-				const newUrl = input.url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-				input = new Request(newUrl, input);
-			}
-			return ogfetch(input, init);
-		};
+    <script>
+        // 1. Capture the original Worker and Fetch functions immediately
+        const OriginalWorker = window.Worker;
+        const originalFetch = window.fetch;
+        const originalXmlOpen = XMLHttpRequest.prototype.open;
 
-		const ogxml = XMLHttpRequest.prototype.open;
-		XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-			if (typeof url === "string") {
-				url = url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-			}
-			return ogxml.call(this, method, url, ...rest);
-		};
-	</script>
-	<link rel="manifest" href="manifest.json" />
-	<meta name="viewport"
-		content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+        // 2. Define the Base URL variable needed for the worker replacement
+        window.jkdfgnjkndfg = document.querySelector('base').href;
+
+        // 3. Prepare a variable to hold our local worker URL
+        window.localWorkerUrl = null;
+
+        // 4. Override the Worker constructor
+        window.Worker = function (scriptUrl, options) {
+            // The game logic is buggy and asking for ".../undefined"
+            // OR it is asking for the CDN URL which is blocked by security.
+            // We intercept both cases and give it our local Blob URL instead.
+            if (typeof scriptUrl === 'string') {
+                const urlString = scriptUrl.toLowerCase();
+                if (urlString.includes('undefined') || urlString.includes('simulation_worker')) {
+                    if (window.localWorkerUrl) {
+                        return new OriginalWorker(window.localWorkerUrl, options);
+                    } else {
+                        console.error("Worker requested before Blob was ready!");
+                    }
+                }
+            }
+            return new OriginalWorker(scriptUrl, options);
+        };
+
+        // 5. Override Fetch (Keep your existing proxy logic)
+        window.fetch = async function (input, init) {
+            if (typeof input === "string") {
+                input = input.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
+            } else if (input instanceof Request) {
+                const newUrl = input.url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
+                input = new Request(newUrl, input);
+            }
+            return originalFetch(input, init);
+        };
+
+        // 6. Override XHR (Keep your existing proxy logic)
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            if (typeof url === "string") {
+                url = url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
+            }
+            return originalXmlOpen.call(this, method, url, ...rest);
+        };
+
+        // 7. THE FIX: Manually fetch the worker, create the blob, THEN load the game.
+        // This prevents the "undefined" error by ensuring the environment is ready.
+        fetch("simulation_worker.bundle.js")
+            .then(res => res.text())
+            .then(text => {
+                // Replace the placeholder in the worker code with the CDN base URL
+                const newCode = text.replaceAll("replacethisplease", window.jkdfgnjkndfg);
+                const blob = new Blob([newCode], { type: 'application/javascript' });
+                window.localWorkerUrl = URL.createObjectURL(blob);
+                console.log("Worker Blob created:", window.localWorkerUrl);
+
+                // Now that the worker is ready, inject the main game script
+                const gameScript = document.createElement('script');
+                gameScript.type = "module";
+                gameScript.src = "main.bundle.js";
+                document.body.appendChild(gameScript);
+            })
+            .catch(err => console.error("Failed to load worker:", err));
+    </script>
 </head>
 
 <body>
-	<canvas id="screen"></canvas>
-	<div id="ui"></div>
-	<div id="transition-layer"></div>
+    <canvas id="screen"></canvas>
+    <div id="ui"></div>
+    <div id="transition-layer"></div>
 
-	<script type="module" src="main.bundle.js" defer></script>
-	<script type="module">
-		// Import the functions you need from the SDKs you need
-		import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-		import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
-		// TODO: Add SDKs for Firebase products that you want to use
-		// https://firebase.google.com/docs/web/setup#available-libraries
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
 
-		// Your web app's Firebase configuration
-		// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-		const firebaseConfig = {
-			apiKey: "AIzaSyAUqQR6G5mReZ_4WMABiQ4JJ_jkUuAd8W0",
-			authDomain: "flqnxlwfizoamsnsduwjskalowpqif.firebaseapp.com",
-			projectId: "flqnxlwfizoamsnsduwjskalowpqif",
-			storageBucket: "flqnxlwfizoamsnsduwjskalowpqif.firebasestorage.app",
-			messagingSenderId: "228780096004",
-			appId: "1:228780096004:web:26c3ec0b667e54f48b1351",
-			measurementId: "G-V8TMKLGZGL"
-		};
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUqQR6G5mReZ_4WMABiQ4JJ_jkUuAd8W0",
+            authDomain: "flqnxlwfizoamsnsduwjskalowpqif.firebaseapp.com",
+            projectId: "flqnxlwfizoamsnsduwjskalowpqif",
+            storageBucket: "flqnxlwfizoamsnsduwjskalowpqif.firebasestorage.app",
+            messagingSenderId: "228780096004",
+            appId: "1:228780096004:web:26c3ec0b667e54f48b1351",
+            measurementId: "G-V8TMKLGZGL"
+        };
 
-		// Initialize Firebase
-		const app = initializeApp(firebaseConfig);
-		const analytics = getAnalytics(app);
-	</script>
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
 </body>
-
 </html>
