@@ -1,93 +1,179 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <base href="https://cdn.jsdelivr.net/gh/Stanlee1234/polytrack@main/">
-    <title>Polytrack</title>
-    <link rel="manifest" href="manifest.json" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Google Drive</title>
     
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo_%282020%29.svg">
+
+    <link rel="stylesheet" href="style.css">
     <style>
-        body { margin: 0; overflow: hidden; background: #000; }
-        canvas { display: block; width: 100%; height: 100%; }
+        /* 1. Global Styles & Variables */
+        :root {
+            --bg-color: #1a1a2e;
+            --tile-bg: #16213e;
+            --accent-color: #e94560;
+            --text-main: #ffffff;
+            --text-secondary: #a9a9a9;
+            --font-stack: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 2. Header Section */
+        header {
+            text-align: center;
+            margin-top: 50px;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        /* 3. The Grid Container */
+        .game-grid {
+            display: grid;
+            /* Auto-fit creates as many columns as fit, min 250px wide */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        /* 4. Tile Styling */
+        .tile {
+            background-color: var(--tile-bg);
+            border: 2px solid transparent;
+            border-radius: 15px;
+            padding: 30px;
+            text-decoration: none; /* Removes underline from links */
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* The Icon/Emoji size */
+        .tile-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .tile h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .tile span {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* 5. Hover Effects (The "Game Feel") */
+        .tile:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--accent-color);
+            box-shadow: 0 15px 30px rgba(233, 69, 96, 0.2);
+            background-color: #1f2b4d;
+        }
+
+        /* Optional: Add a subtle glow overlay on hover */
+        .tile::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, transparent 0%, rgba(233, 69, 96, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tile:hover::after {
+            opacity: 1;
+        }
+
+        /* 6. Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments for mobile */
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .tile { padding: 20px; }
+        }
     </style>
-
-    <script>
-        // 1. Capture the original Worker and Fetch functions immediately
-        const OriginalWorker = window.Worker;
-        const originalFetch = window.fetch;
-        const originalXmlOpen = XMLHttpRequest.prototype.open;
-
-        // 2. Define the Base URL variable needed for the worker replacement
-        window.jkdfgnjkndfg = document.querySelector('base').href;
-
-        // 3. Prepare a variable to hold our local worker URL
-        window.localWorkerUrl = null;
-
-        // 4. Override the Worker constructor
-        window.Worker = function (scriptUrl, options) {
-            // The game logic is buggy and asking for ".../undefined"
-            // OR it is asking for the CDN URL which is blocked by security.
-            // We intercept both cases and give it our local Blob URL instead.
-            if (typeof scriptUrl === 'string') {
-                const urlString = scriptUrl.toLowerCase();
-                if (urlString.includes('undefined') || urlString.includes('simulation_worker')) {
-                    if (window.localWorkerUrl) {
-                        return new OriginalWorker(window.localWorkerUrl, options);
-                    } else {
-                        console.error("Worker requested before Blob was ready!");
-                    }
-                }
-            }
-            return new OriginalWorker(scriptUrl, options);
-        };
-
-        // 5. Override Fetch (Keep your existing proxy logic)
-        window.fetch = async function (input, init) {
-            if (typeof input === "string") {
-                input = input.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-            } else if (input instanceof Request) {
-                const newUrl = input.url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-                input = new Request(newUrl, input);
-            }
-            return originalFetch(input, init);
-        };
-
-        // 6. Override XHR (Keep your existing proxy logic)
-        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-            if (typeof url === "string") {
-                url = url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-            }
-            return originalXmlOpen.call(this, method, url, ...rest);
-        };
-
-        // 7. THE FIX: Manually fetch the worker, create the blob, THEN load the game.
-        // This prevents the "undefined" error by ensuring the environment is ready.
-        fetch("simulation_worker.bundle.js")
-            .then(res => res.text())
-            .then(text => {
-                // Replace the placeholder in the worker code with the CDN base URL
-                const newCode = text.replaceAll("replacethisplease", window.jkdfgnjkndfg);
-                const blob = new Blob([newCode], { type: 'application/javascript' });
-                window.localWorkerUrl = URL.createObjectURL(blob);
-                console.log("Worker Blob created:", window.localWorkerUrl);
-
-                // Now that the worker is ready, inject the main game script
-                const gameScript = document.createElement('script');
-                gameScript.type = "module";
-                gameScript.src = "main.bundle.js";
-                document.body.appendChild(gameScript);
-            })
-            .catch(err => console.error("Failed to load worker:", err));
-    </script>
 </head>
-
 <body>
-    <canvas id="screen"></canvas>
-    <div id="ui"></div>
-    <div id="transition-layer"></div>
 
+    <header>
+        <h1>The thing that they those</h1>
+        <p class="subtitle">Select your game mode</p>
+    </header>
+
+    <div class="game-grid">
+        <a href="polytrack.html" class="tile">
+            <div class="tile-icon">⚔️</div>
+            <h2>Polytrack</h2>
+            <span>A low-poly, 3d racing game</span>
+        </a>
+
+        <a href="arcade.html" class="tile">
+            <div class="tile-icon">🕹️</div>
+            <h2>Arcade</h2>
+        </a>
+
+        <a href="multiplayer.html" class="tile">
+            <div class="tile-icon">🌍</div>
+            <h2>Multiplayer</h2>
+        </a>
+
+        <a href="inventory.html" class="tile">
+            <div class="tile-icon">🎒</div>
+            <h2>Inventory</h2>
+        </a>
+
+        <a href="settings.html" class="tile">
+            <div class="tile-icon"> </div>
+            <h2>Settings</h2>
+        </a>
+
+        <a href="credits.html" class="tile">
+            <div class="tile-icon">🏆</div>
+            <h2>Credits</h2>
+        </a>
+    </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
