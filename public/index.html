@@ -63,49 +63,48 @@
         }
 
         /* 4. Tile Styling */
+        /* Update the Tile to remove default padding */
         .tile {
             background-color: var(--tile-bg);
             border: 2px solid transparent;
             border-radius: 15px;
-            padding: 30px;
-            text-decoration: none; /* Removes underline from links */
+            padding: 0; /* CHANGED: Remove padding so image touches edges */
+            text-decoration: none;
             color: var(--text-main);
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+            flex-direction: column; /* Stacks image on top of text */
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             position: relative;
             overflow: hidden;
+            height: 100%; /* Ensures all tiles stretch evenly */
         }
 
-        /* The Icon/Emoji size */
-        .tile-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
+        /* New: Style for the Game Image */
+        .tile-img {
+            width: 100%;
+            height: 160px; /* Fixed height for consistency */
+            object-fit: cover; /* Ensures image fills space without stretching */
+            border-bottom: 2px solid rgba(233, 69, 96, 0.1);
         }
 
-        .tile h2 {
-            margin: 0;
-            font-size: 1.5rem;
+        /* New: Wrapper for the text so it has padding */
+        .tile-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1; /* Pushes content to fill space */
         }
 
-        .tile span {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        /* 5. Hover Effects (The "Game Feel") */
+        /* Hover Effects remain the same */
         .tile:hover {
             transform: translateY(-10px) scale(1.02);
             border-color: var(--accent-color);
             box-shadow: 0 15px 30px rgba(233, 69, 96, 0.2);
             background-color: #1f2b4d;
         }
-
         /* Optional: Add a subtle glow overlay on hover */
         .tile::after {
             content: '';
@@ -135,7 +134,7 @@
             position: relative;
             width: 90%;
             max-width: 1200px;
-            height: 300px; /* Adjust height as needed */
+            height: 350px; /* Adjust height as needed */
             margin: 40px auto;
             border-radius: 20px;
             overflow: hidden;
@@ -146,7 +145,8 @@
         .hero-image {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Keeps image from looking squashed */
+            /* 'fill' stretches the image to perfectly match the box width and height */
+            object-fit: fill; 
             display: block;
         }
 
@@ -189,12 +189,27 @@
         .fullscreen-btn:hover {
             opacity: 0.8;
         }
+        .footer {
+            width: 100%;
+            padding: 30px 0;
+            margin-top: 40px;
+            text-align: center;
+            border-top: 1px solid rgba(233, 69, 96, 0.1);
+        }
+
+        .version {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-family: monospace;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
 
     <div class="hero-container">
-        <img src="https://i.ytimg.com/vi/uihJSILRREE/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDRYqbxgDvBxexVXO0jqid1npcADA" alt="Game Banner" class="hero-image">
+        <img id="hero-banner" src="https://i.ytimg.com/vi/uihJSILRREE/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDRYqbxgDvBxexVXO0jqid1npcADA" alt="Game Banner" class="hero-image">
         <div class="hero-title-box">
             <h1 class="hero-title">Welcome Home.</h1>
             <p class="hero-subtitle">Games for you to enjoy.</p>
@@ -203,18 +218,27 @@
 
     <div class="game-grid">
         <a href="game-player.html?game=polytrack.html" class="tile">
-            <h2>Polytrack</h2>
-            <span>A low-poly, 3d racing game</span>
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBSNu0AmRAtGhIsocSF92NDGaSQZCihDlOBQ&s" alt="Polytrack" class="tile-img">
+            <div class="tile-content">
+                <h2>Polytrack</h2>
+                <span>A low-poly, 3d racing game</span>
+            </div>
         </a>
     
         <a href="game-player.html?game=slowroads.html" class="tile">
-            <h2>Slowroads</h2>
-            <span>Endless driving zen</span>
+            <img src="https://cdn.arstechnica.net/wp-content/uploads/2022/10/slowroads_hero_1.jpg" alt="Slowroads" class="tile-img">
+            <div class="tile-content">
+                <h2>Slowroads</h2>
+                <span>Endless driving zen</span>
+            </div>
         </a>
     
         <a href="game-player.html?game=clashofvikings.html" class="tile">
-            <h2>Clash of Vikings</h2>
-            <span>Clash Royale</span>
+            <img src="https://i.ytimg.com/vi/6dHVDIac_b4/mqdefault.jpg" alt="Clash of Vikings" class="tile-img">
+            <div class="tile-content">
+                <h2>Clash of Vikings</h2>
+                <span>Clash Royale (Very real)</span>
+            </div>
         </a>
     </div>
     <script type="module">
@@ -233,6 +257,28 @@
 
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
+        // 1. Define your 4 images here
+        const bannerImages = [
+            "https://i.ytimg.com/vi/uihJSILRREE/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDRYqbxgDvBxexVXO0jqid1npcADA", // Your Original
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQv4RNkm-4D_A0s8lXs6SECI3fiQ9O_-j6lsw&s", // Poly/Abstract Art
+            "https://i.ytimg.com/vi/C8yC8V4wipU/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAYb2AN3X1zAnPhCwdon2xYF3j2AQ", // Retro Gaming
+            "https://i.ytimg.com/vi/qGPJxFxb5Sk/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLD1DI7CABA5iIQn3Q9EKj1kLqFNyQ"  // Cyberpunk City
+        ];
+
+        // 2. Logic to pick one randomly
+        function setRandomBanner() {
+            const bannerElement = document.getElementById('hero-banner');
+            if (bannerElement) {
+                const randomIndex = Math.floor(Math.random() * bannerImages.length);
+                bannerElement.src = bannerImages[randomIndex];
+            }
+        }
+
+        // 3. Run immediately
+        setRandomBanner();
     </script>
+    <footer class="footer">
+        <p class="version">v1.0.2</p>
+    </footer>
 </body>
 </html>
