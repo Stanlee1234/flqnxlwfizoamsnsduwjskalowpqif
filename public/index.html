@@ -174,6 +174,21 @@
             font-weight: bold;
             letter-spacing: 2px;
         }        
+        .fullscreen-btn {
+            margin-left: 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        .fullscreen-btn:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -187,34 +202,19 @@
     </div>
 
     <div class="game-grid">
-        <a href="polytrack.html" class="tile">
+        <a href="game-player.html?game=polytrack.html" class="tile">
             <h2>Polytrack</h2>
             <span>A low-poly, 3d racing game</span>
         </a>
-
-        <a href="slowroads.html" class="tile">
+    
+        <a href="game-player.html?game=slowroads.html" class="tile">
             <h2>Slowroads</h2>
             <span>Endless driving zen</span>
         </a>
-
-        <a href="clashofvikings.html" class="tile">
+    
+        <a href="game-player.html?game=clashofvikings.html" class="tile">
             <h2>Clash of Vikings</h2>
             <span>Clash Royale</span>
-        </a>
-
-        <a href="inventory.html" class="tile">
-            <div class="tile-icon">🎒</div>
-            <h2>Inventory</h2>
-        </a>
-
-        <a href="settings.html" class="tile">
-            <div class="tile-icon"> </div>
-            <h2>Settings</h2>
-        </a>
-
-        <a href="credits.html" class="tile">
-            <div class="tile-icon">🏆</div>
-            <h2>Credits</h2>
         </a>
     </div>
     <script type="module">
