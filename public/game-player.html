@@ -4,174 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - Google Drive</title>
+    
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/640px-Google_Drive_icon_%282020%29.svg.png">
     <style>
-        body, html {
-            margin: 0; padding: 0; height: 100%; overflow: hidden;
-            background-color: #1a1a2e; font-family: 'Segoe UI', sans-serif;
-        }
-        /* Top Bar Navigation */
+        body, html { margin: 0; padding: 0; height: 100%; background: #1a1a2e; overflow: hidden; }
+        
         .nav-bar {
-            height: 60px;
-            background: #16213e;
-            display: flex;
-            align-items: center;
-            justify-content: space-between; /* This pushes one left, one right */
-            padding: 0 30px; /* Adds a little breathing room from the edges */
-            border-bottom: 2px solid #e94560;
+            height: 60px; background: #16213e; display: flex; 
+            align-items: center; justify-content: space-between;
+            padding: 0 20px; border-bottom: 2px solid #e94560;
+            box-sizing: border-box;
         }
 
-        .site-fullscreen-btn {
-            /* Resets the default grey button look */
-            background: rgba(233, 69, 96, 0.1); 
-            color: #ffffff;
-            border: 2px solid #e94560;
-            padding: 8px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Segoe UI', sans-serif;
-            font-weight: bold;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        /* FORCE THE WRAPPER TO BE FULL SCREEN */
+        #gameContainer {
+            position: absolute;
+            top: 60px; /* Start below the nav-bar */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
         }
 
-        .site-fullscreen-btn:hover {
-            background: #e94560;
-            color: white;
-            box-shadow: 0 0 15px rgba(233, 69, 96, 0.6);
-            transform: translateY(-2px);
-}
-        .back-btn {
-            color: white; text-decoration: none; font-weight: bold;
-            padding: 8px 15px; border: 1px solid #e94560; border-radius: 5px;
-        }
-        /* The Game Container */
-        .game-wrapper {
-            width: 100%; height: calc(100vh - 60px);
-        }
-        iframe {
-            width: 100%; height: 100%; border: none;
-        }
-        .controls-right {
-            display: flex;
-            gap: 15px; /* Space between the two buttons */
-            align-items: center;
-        }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* Base style for both control buttons */
-        .site-reload-btn:hover{
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-            display: flex;
-            gap: 8px;
-        }
-
-        .site-reload-btn:hover{
-            background: var(--accent-color);
-            color: white;
-            box-shadow: 0 0 10px rgba(233, 69, 96, 0.4);
-        }
-
-        /* Specific style for Reload to distinguish it slightly */
-        .site-reload-btn {
-            border-color: #a9a9a9;
-            color: #a9a9a9;
-        }
-        .site-reload-btn:hover {
-            background: #a9a9a9;
-            border-color: #a9a9a9;
+        .btn {
+            background: #1a1a2e; color: white; border: 2px solid #e94560;
+            padding: 8px 15px; border-radius: 8px; cursor: pointer;
+            font-family: sans-serif; font-weight: bold; text-decoration: none;
         }
     </style>
 </head>
 <body>
     <div class="nav-bar">
-        <a href="index.html" class="back-btn">← Back to Home</a>
-        
-        <div class="controls-right">
-            <button onclick="reloadGame();" class="site-reload-btn" title="Fix loading issues">
-                <span>↻</span> RELOAD
-            </button>
-            
-            <button onclick="toggleGameFullscreen();" class="site-fullscreen-btn">
-                <span>⛶</span> FULLSCREEN
-            </button>
+        <a href="index.html" class="btn">← Back</a>
+        <div style="display:flex; gap:10px;">
+            <button onclick="location.reload()" class="btn">↻ RELOAD</button>
+            <button onclick="toggleFullscreen()" class="btn">⛶ FULLSCREEN</button>
         </div>
     </div>
-    
-    <div id="gameContainer" class="game-wrapper">
-        <iframe id="gameFrame" src="" allow="autoplay; fullscreen; keyboard" allowfullscreen></iframe>
+
+    <div id="gameContainer">
+        <iframe id="gameFrame" src="" 
+                allow="autoplay; fullscreen; cross-origin-isolated" 
+                allowfullscreen></iframe>
     </div>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const gameToLoad = params.get('game');
+        const game = new URLSearchParams(window.location.search).get('game');
+        if (game) { document.getElementById('gameFrame').src = game; }
 
-        if (gameToLoad) {
-            // This adds a unique timestamp (e.g., ?v=17152342) to the end of the file name
-            // This forces the browser to download a fresh copy instead of using a broken cache
-            const cacheBuster = "?v=" + new Date().getTime();
-            document.getElementById('gameFrame').src = gameToLoad + cacheBuster;
-        } else {
-            document.body.innerHTML = "<h1 style='color:white; text-align:center;'>Game not found</h1>";
-        }
-        function toggleGameFullscreen() {
-            // Target the specific game container, not the whole document
-            const gameArea = document.getElementById("gameContainer");
-
+        function toggleFullscreen() {
+            const container = document.getElementById("gameContainer");
             if (!document.fullscreenElement) {
-                if (gameArea.requestFullscreen) {
-                    gameArea.requestFullscreen();
-                } else if (gameArea.webkitRequestFullscreen) { /* Safari */
-                    gameArea.webkitRequestFullscreen();
-                } else if (gameArea.msRequestFullscreen) { /* IE11 */
-                    gameArea.msRequestFullscreen();
-                }
-            } else {
-                // If already fullscreen, clicking the button again exits it
-                document.exitFullscreen();
-            }
-        }
-        // Function to get the current game from the URL
-        function getGameUrl() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('game');
-        }
-
-        // Initial Load
-        const initialGame = getGameUrl();
-        if (initialGame) {
-            reloadGame(); // Use the reload function to start the game with a fresh cache
-        }
-
-        // The Reload Function
-        function reloadGame() {
-            const game = getGameUrl();
-            if (game) {
-                const iframe = document.getElementById('gameFrame');
-                // Adds a unique timestamp to force a fresh download from the server
-                const freshUrl = game + "?t=" + new Date().getTime();
-                iframe.src = freshUrl;
-                console.log("Game reloaded with fresh cache: " + freshUrl);
-            }
-        }
-
-        // The Fullscreen Function (Targets the Container)
-        function toggleGameFullscreen() {
-            const gameArea = document.getElementById("gameContainer");
-            if (!document.fullscreenElement) {
-                gameArea.requestFullscreen().catch(err => {
-                    console.error(`Error: ${err.message}`);
-                });
+                container.requestFullscreen();
             } else {
                 document.exitFullscreen();
             }

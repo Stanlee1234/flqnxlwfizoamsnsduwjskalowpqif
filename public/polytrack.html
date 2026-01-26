@@ -1,63 +1,86 @@
 <!DOCTYPE html>
-
-
-<!-- Ultimate Game Stash file--> 
-<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
-
-
-
-
-
 <html>
-
 <head>
-	<base href="https://cdn.jsdelivr.net/gh/Stanlee1234/polytrack@main/">
-	<title>Home - Google Drive</title>
-	<script>
-		window.jkdfgnjkndfg = document.querySelector('base').href;
-		fetch("simulation_worker.bundle.js").then(res => res.text()).then(text => {
-			const blob = new Blob([text.replaceAll("replacethisplease", window.jkdfgnjkndfg)], { type: 'application/javascript' });
-			window.simulationworker = URL.createObjectURL(blob);
-		});
-		const ogworker = window.Worker;
-		window.Worker = function (scripturl, options) {
-			if (typeof scripturl === 'string' && scripturl.toLowerCase() === "simulation_worker.bundle.js") {
-				scripturl = window.simulationworker;
-			}
-			return new ogworker(scripturl, options);
-		};
-		window.Worker.prototype = ogworker.prototype;
+    <title>Polytrack</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
 
-		const ogfetch = window.fetch;
-		window.fetch = async function (input, init) {
-			if (typeof input === "string") {
-				input = input.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-			} else if (input instanceof Request) {
-				const newUrl = input.url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-				input = new Request(newUrl, input);
-			}
-			return ogfetch(input, init);
-		};
+    <base href="https://cdn.jsdelivr.net/gh/Stanlee1234/polytrack@main/">
 
-		const ogxml = XMLHttpRequest.prototype.open;
-		XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-			if (typeof url === "string") {
-				url = url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
-			}
-			return ogxml.call(this, method, url, ...rest);
-		};
-	</script>
-	<link rel="manifest" href="manifest.json" />
-	<meta name="viewport"
-		content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <script>
+        // Define the source URL securely
+        const CDN_URL = "https://cdn.jsdelivr.net/gh/Stanlee1234/polytrack@main/";
+        window.jkdfgnjkndfg = CDN_URL;
+
+        // 2. THE NETWORK OVERRIDES (Keep these to ensure servers work)
+        const ogfetch = window.fetch;
+        window.fetch = async function (input, init) {
+            if (typeof input === "string") {
+                input = input.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
+            } else if (input instanceof Request) {
+                const newUrl = input.url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
+                input = new Request(newUrl, input);
+            }
+            return ogfetch(input, init);
+        };
+
+        const ogxml = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            if (typeof url === "string") {
+                url = url.replace("vps.kodub.com:43273", "vpskodub.tmena1565.workers.dev");
+            }
+            return ogxml.call(this, method, url, ...rest);
+        };
+
+        // 3. THE CRITICAL FIX: Load Worker FIRST, then Start Game
+        // We do not put <script src="main.bundle.js"> in the body anymore.
+        // We load it here manually.
+        
+        async function initializeGame() {
+            try {
+                console.log("Downloading Worker...");
+                // Fetch the worker code
+                const response = await ogfetch(CDN_URL + "simulation_worker.bundle.js");
+                const text = await response.text();
+
+                // Create the secure Blob
+                const updatedScript = text.replaceAll("replacethisplease", CDN_URL);
+                const blob = new Blob([updatedScript], { type: 'application/javascript' });
+                window.simulationworker = URL.createObjectURL(blob);
+                console.log("Worker Blob created:", window.simulationworker);
+
+                // Override the Worker constructor
+                const originalWorker = window.Worker;
+                window.Worker = function (script, options) {
+                    // If the game asks for the simulation worker, give it our Blob instead
+                    if (typeof script === 'string' && script.includes("simulation_worker.bundle.js")) {
+                        return new originalWorker(window.simulationworker, options);
+                    }
+                    return new originalWorker(script, options);
+                };
+                window.Worker.prototype = originalWorker.prototype;
+
+                // 4. START THE GAME NOW
+                console.log("Starting Game...");
+                const gameScript = document.createElement('script');
+                gameScript.type = "module";
+                gameScript.src = CDN_URL + "main.bundle.js";
+                document.body.appendChild(gameScript);
+
+            } catch (err) {
+                console.error("Critical Game Load Error:", err);
+                alert("Game failed to load. Please check console.");
+            }
+        }
+
+        // Run the initialization
+        window.onload = initializeGame;
+    </script>
 </head>
 
-<body>
-	<canvas id="screen"></canvas>
-	<div id="ui"></div>
-	<div id="transition-layer"></div>
-
-	<script type="module" src="main.bundle.js" defer></script>
-</body>
-
+<body style="margin:0; overflow:hidden; background-color:black;">
+    <canvas id="screen" style="width:100%; height:100%; display:block;"></canvas>
+    <div id="ui"></div>
+    <div id="transition-layer"></div>
+    
+    </body>
 </html>
