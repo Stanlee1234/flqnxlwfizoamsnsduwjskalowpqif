@@ -1,6 +1,5 @@
 {
   "hosting": {
-    "site": "rean-1ohio-gb2liew",
     "public": "public",
     "ignore": [
       "firebase.json",
